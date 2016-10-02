@@ -7,11 +7,8 @@ var app = express(); // define our app using express
 var bodyParser = require('body-parser');//call body-parser
 var morgan = require('morgan');//use to see request
 var mongoose = require('mongoose');//for working w/ our database
-var port = process.env.PORT || 8080;//set the port for our app
-
-//BASE SETUP
-//==========================
-
+var config = require('./config');
+var path = require('path');
 
 //APP CONFIG
 //====================================
@@ -27,42 +24,35 @@ app.use(function(req,res,next){
 	next(); 
 });
 
-//connect to our database (hosted in modulus.io)
-
-//mongoose.connect('mongodb://node:noder@novus.modulusmongo.net:27017/Iganiq8o')
-//connect to our database hosted locally
-
-mongoose.connect('mongodb://localhost:27017/CRM');
-
-
-
 //log all request to the console
 app.use(morgan('dev'));
-// ROUTES FOR OUR API
 
-//basic routes for the homepage
+//connect to our database hosted locally
 
-app.get('/',function(req,res){
-	res.send('Welcome to the homepage!');
+mongoose.Promise = global.Promise;
+mongoose.connect(config.database);
+
+//set static files location
+//used for requests that  our frontend will make
+
+app.use(express.static(__dirname+'/public'));
+//ROUTES FOR OUR API ==========================
+
+
+//API ROUTES ===================================
+
+var apiRoutes = require('./app/routes/api')(app,express);
+app.use('/api', apiRoutes);
+
+//MAIN CATCHALL ROUTE ----------------------
+//SEND USERS TO FRONTEND -------------------
+//has to be registered after API ROUTES
+app.get('*',function(req,res){
+	res.sendFile(path.join(__dirname+'/public/app/views/index.html'));
 });
-
-//get an instance of the express router
-var apiRouter=express.Router();
-
-//test route to make sure everything is working
-//accessed at GET http://localhost:8080/api
-apiRouter.get('/',function(req,res){
-	res.json({message: 'hooray! welcome to our api'});
-});
-
- // more routes for our API will happen here 
-
- // REGISTER OUR ROUTES ------------------------------
- // all of our routes will be prefixed with /api 
-app.use('/api', apiRouter);
 
 
 //START THE SERVER
 
-app.listen(port);
-console.log('Magic happens on port '+port);
+app.listen(config.port);
+console.log('Magic happens on port '+config.port);
