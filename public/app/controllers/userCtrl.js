@@ -17,7 +17,7 @@ angular.module('userCtrl', ['userService'])
     vm.processing = false;
     // bind the users that come back to vm.users
     vm.users = data;
-  });
+  })
 
   // function to delete a user
   vm.deleteUser = function(id) {
